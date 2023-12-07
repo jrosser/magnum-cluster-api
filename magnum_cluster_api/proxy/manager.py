@@ -44,6 +44,7 @@ class ProxyManager(periodic_task.PeriodicTasks):
             autoescape=jinja2.select_autoescape(),
         ).get_template("haproxy.cfg.j2")
         self.haproxy_port = os.getenv("PROXY_PORT", utils.find_free_port())
+        self.haproxy_bind = os.getenv("PROXY_BIND", "*")
         self.haproxy_pid = None
 
     def periodic_tasks(self, context, raise_on_error=False):
@@ -51,7 +52,7 @@ class ProxyManager(periodic_task.PeriodicTasks):
 
     def _sync_haproxy(self, proxied_clusters: list):
         # Generate HAproxy config
-        config = self.template.render(port=self.haproxy_port, clusters=proxied_clusters)
+        config = self.template.render(bind=self.haproxy_bind, port=self.haproxy_port, clusters=proxied_clusters)
 
         # Skip if no change has been done
         if self.checksum == hash(config):
